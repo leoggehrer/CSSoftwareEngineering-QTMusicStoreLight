@@ -57,11 +57,12 @@ namespace QTMusicStoreLight.Logic.Controllers
                 return entity;
             });
         }
-        public virtual Task UpdateAsync(IEnumerable<E> entities)
+        public virtual Task<IEnumerable<E>> UpdateAsync(IEnumerable<E> entities)
         {
             return Task.Run(() =>
             {
                 EntitySet.UpdateRange(entities);
+                return entities;
             });
         }
         #endregion Update

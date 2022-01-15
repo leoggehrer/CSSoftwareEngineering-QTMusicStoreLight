@@ -38,11 +38,11 @@ namespace QTMusicStoreLight.WpfApp.ViewModels
         }
 
         #region Factory mothods
-        public static ICommand CreateCommand(ref ICommand command, Action<object?> execute)
+        public static ICommand CreateCommand(ref ICommand? command, Action<object?> execute)
         {
             return CreateCommand(ref command, execute, null);
         }
-        public static ICommand CreateCommand(ref ICommand command, Action<object?> execute, Predicate<object?>? canExecute)
+        public static ICommand CreateCommand(ref ICommand? command, Action<object?> execute, Predicate<object?>? canExecute)
         {
             if (command == null)
             {

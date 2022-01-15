@@ -1,5 +1,8 @@
 ﻿//@CodeCopy
 //MdStart
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace QTMusicStoreLight.ConApp
 {

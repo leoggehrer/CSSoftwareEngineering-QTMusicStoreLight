@@ -35,23 +35,24 @@ namespace QTMusicStoreLight.ConApp
                                      Title = d[1],
                                  }
                              });
-
-            Task.Run(async () =>
-            {
-                using var albumsCtrl = new Logic.Controllers.AlbumsController();
                 var artists = csvArtists.Select(e => e.Entity).ToArray();
                 var genres = csvGenres.Select(e => e.Entity).ToArray();
                 var albums = new List<Logic.Entities.Album>();
 
                 foreach (var item in csvAlbums)
                 {
-                    var artIdx = csvArtists.Select((e, i) => new { e, i }).First(e => e.e.id == item.ArtistId).i;
-                    var genIdx = csvGenres.Select((e, i) => new { e, i }).First(e => e.e.id == item.GenreId).i;
+                    var genIdx = csvGenres.IndexOf(e => e.id == item.GenreId);
+                    var artIdx = csvArtists.IndexOf(e => e.id == item.ArtistId);
 
-                    item.Entity.Artist = artists[artIdx];
                     item.Entity.Genre = genres[genIdx];
+                    item.Entity.Artist = artists[artIdx];
                     albums.Add(item.Entity);
                 }
+
+            Task.Run(async () =>
+            {
+                using var albumsCtrl = new Logic.Controllers.AlbumsController();
+
                 albums = (await albumsCtrl.InsertAsync(albums)).ToList();
                 await albumsCtrl.SaveChangesAsync();
             }).Wait();
