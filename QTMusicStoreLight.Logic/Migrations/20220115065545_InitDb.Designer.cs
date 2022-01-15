@@ -12,7 +12,7 @@ using QTMusicStoreLight.Logic.DataContext;
 namespace QTMusicStoreLight.Logic.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    [Migration("20220114213302_InitDb")]
+    [Migration("20220115065545_InitDb")]
     partial class InitDb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

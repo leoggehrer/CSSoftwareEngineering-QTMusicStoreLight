@@ -7,38 +7,52 @@ namespace QTMusicStoreLight.ConApp
     {
         static partial void AfterRun()
         {
-            var genres = File.ReadAllLines("CsvData/Genre.csv")
+            var csvGenres = File.ReadAllLines("CsvData/Genre.csv")
                              .Skip(1)
                              .Select(l => l.Split(";"))
-                             .Select(d => new { id = d[0], Entity = new Logic.Entities.Genre { Name = d[1] }});
-            var artists = File.ReadAllLines("CsvData/Artist.csv")
+                             .Select(d => new { id = d[0], Entity = new Logic.Entities.Genre { Name = d[1] } });
+            var csvArtists = File.ReadAllLines("CsvData/Artist.csv")
                              .Skip(1)
                              .Select(l => l.Split(";"))
-                             .Select(d => new { id = d[0], Entity = new Logic.Entities.Artist { Name = d[1] }});
+                             .Select(d => new
+                             {
+                                 id = d[0],
+                                 Entity = new Logic.Entities.Artist
+                                 {
+                                     Name = d[1],
+                                 }
+                             });
+            var csvAlbums = File.ReadAllLines("CsvData/Album.csv")
+                             .Skip(1)
+                             .Select(l => l.Split(";"))
+                             .Select(d => new
+                             {
+                                 id = d[0],
+                                 ArtistId = d[2],
+                                 GenreId = d[3],
+                                 Entity = new Logic.Entities.Album
+                                 {
+                                     Title = d[1],
+                                 }
+                             });
+
             Task.Run(async () =>
             {
-                using var artistsCtrl = new Logic.Controllers.ArtistsController();
-                using var genresCtrl = new Logic.Controllers.GenresController(artistsCtrl);
-                using var albumsCtrl = new Logic.Controllers.AlbumsController(artistsCtrl);
+                using var albumsCtrl = new Logic.Controllers.AlbumsController();
+                var artists = csvArtists.Select(e => e.Entity).ToArray();
+                var genres = csvGenres.Select(e => e.Entity).ToArray();
+                var albums = new List<Logic.Entities.Album>();
 
-                var arts = (await artistsCtrl.InsertAsync(artists.Select(e => e.Entity))).ToArray();
-                var gens = (await genresCtrl.InsertAsync(genres.Select(e => e.Entity))).ToArray();
-                await artistsCtrl.SaveChangesAsync();
+                foreach (var item in csvAlbums)
+                {
+                    var artIdx = csvArtists.Select((e, i) => new { e, i }).First(e => e.e.id == item.ArtistId).i;
+                    var genIdx = csvGenres.Select((e, i) => new { e, i }).First(e => e.e.id == item.GenreId).i;
 
-                var albums = File.ReadAllLines("CsvData/Album.csv")
-                                 .Skip(1)
-                                 .Select(l => l.Split(";"))
-                                 .Select(d => new {
-                                     id = d[0],
-                                     Entity = new Logic.Entities.Album
-                                     {
-                                         Title = d[1],
-                                         Artist = artists.First(e => e.id == d[2]).Entity,
-                                         Genre = genres.First(e => e.id == d[3]).Entity,
-                                     }
-                                 });
-
-                await albumsCtrl.InsertAsync(albums.Select(e => e.Entity));
+                    item.Entity.Artist = artists[artIdx];
+                    item.Entity.Genre = genres[genIdx];
+                    albums.Add(item.Entity);
+                }
+                albums = (await albumsCtrl.InsertAsync(albums)).ToList();
                 await albumsCtrl.SaveChangesAsync();
             }).Wait();
         }

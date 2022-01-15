@@ -15,7 +15,7 @@ namespace QTMusicStoreLight.Logic.Entities
         public string Title { get; set; } = String.Empty;
 
         // Navigation properties
-        public Artist Artist { get; set; } = new();
-        public Genre Genre { get; set; } = new();
+        public Artist? Artist { get; set; }
+        public Genre? Genre { get; set; }
     }
 }

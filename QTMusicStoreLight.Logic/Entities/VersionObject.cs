@@ -10,7 +10,7 @@ namespace QTMusicStoreLight.Logic.Entities
         /// Row version of the entity.
         /// </summary>
         [Timestamp]
-        public byte[]? RowVersion { get; set; }
+        public byte[]? RowVersion { get; internal set; }
     }
 }
 //MdEnd

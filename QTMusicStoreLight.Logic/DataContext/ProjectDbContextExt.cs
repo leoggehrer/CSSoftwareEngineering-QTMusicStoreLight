@@ -23,7 +23,8 @@ namespace QTMusicStoreLight.Logic.DataContext
             {
                 dbSet = GenreSet as DbSet<E>;
             }
-            else
+
+            if (dbSet == null)
             {
                 dbSet = Set<E>() as DbSet<E>;
             }
