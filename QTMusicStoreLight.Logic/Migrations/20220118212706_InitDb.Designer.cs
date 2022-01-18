@@ -12,7 +12,7 @@ using QTMusicStoreLight.Logic.DataContext;
 namespace QTMusicStoreLight.Logic.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    [Migration("20220115065545_InitDb")]
+    [Migration("20220118212706_InitDb")]
     partial class InitDb
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -70,8 +70,8 @@ namespace QTMusicStoreLight.Logic.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()

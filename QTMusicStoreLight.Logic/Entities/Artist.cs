@@ -9,7 +9,7 @@ namespace QTMusicStoreLight.Logic.Entities
     public class Artist : VersionObject
     {
         [Required]
-        [MaxLength(256)]
+        [MaxLength(128)]
         public string Name { get; set; } = String.Empty;
 
         // Navigation properties

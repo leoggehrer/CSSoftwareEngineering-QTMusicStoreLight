@@ -13,22 +13,19 @@ namespace QTMusicStoreLight.Logic.DataContext
         {
             if (typeof(E) == typeof(Artist))
             {
+                handled = true;
                 dbSet = ArtistSet as DbSet<E>;
             }
             else if (typeof(E) == typeof(Album))
             {
+                handled = true;
                 dbSet = AlbumSet as DbSet<E>;
             }
             else if ((typeof(E) == typeof(Genre)))
             {
+                handled = true;
                 dbSet = GenreSet as DbSet<E>;
             }
-
-            if (dbSet == null)
-            {
-                dbSet = Set<E>() as DbSet<E>;
-            }
-            handled = true;
         }
     }
 }
