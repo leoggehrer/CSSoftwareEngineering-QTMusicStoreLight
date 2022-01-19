@@ -21,7 +21,7 @@ namespace QTMusicStoreLight.Logic.DataContext
                 handled = true;
                 dbSet = AlbumSet as DbSet<E>;
             }
-            else if ((typeof(E) == typeof(Genre)))
+            else if (typeof(E) == typeof(Genre))
             {
                 handled = true;
                 dbSet = GenreSet as DbSet<E>;
