@@ -1,6 +1,5 @@
 ﻿//@CodeCopy
 //MdStart
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace QTMusicStoreLight.Logic.DataContext
@@ -50,10 +49,6 @@ namespace QTMusicStoreLight.Logic.DataContext
             return result;
         }
         partial void GetDbSet<E>(ref DbSet<E>? dbSet, ref bool handled) where E : Entities.IdentityObject;
-        public IQueryable<E> QueryableSet<E>() where E : Entities.IdentityObject
-        {
-            return GetDbSet<E>();
-        }
     }
 }
 //MdEnd
