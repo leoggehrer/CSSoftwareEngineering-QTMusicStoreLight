@@ -16,11 +16,9 @@ Dieses Projekt ist mit der Vorlage ***QuickTemplate*** erstellt worden und wird 
    6. [Erstellen der Datenbank](#erstellen-der-datenbank)
    7. [Importieren von Daten](#importieren-von-daten)
 
-# Projektbeschreibung
+# Projektbeschreibung  
 
-# Erstellen der Entitäten<a name="erstellen-der-entitaeten"/>  
-
-Das Datenmodell für den **MusicStoreLight** ist wie folgt definiert:
+***QTMusicStoreLight*** ist eine einfache Anwendung zur Verwaltung von Musik-Daten. Damit sollen Künstler (Artists) und deren Alben in einer Datenbank gespeichert werden und bei Bedarf wieder abgerufen werden können. Die Bearbeitung der Daten soll über eine Web-Anwendung als auch über eine Desktop Anwendung ermöglicht werden. Das Datenmodell ist in der folgenden Abbildung skizziert.
 
 ```txt
                 +-------------+                 +-------------+
@@ -37,6 +35,9 @@ Das Datenmodell für den **MusicStoreLight** ist wie folgt definiert:
 +------+------+
 
 ```
+
+Ein Künstler kann beliebig viele Alben zugeordnet haben und das Album ist mit einer Musikrichtung (Genre) verbunden. Das Datenmodell für den **MusicStoreLight** ist wie folgt definiert:
+
 
 ### Definition von ***Artist***
 
@@ -63,6 +64,9 @@ Das Datenmodell für den **MusicStoreLight** ist wie folgt definiert:
 | Id | int |---|---|---|
 | RowVersion | byte[] |---|No|---|
 | Name | String | 128 | No |Yes|
+
+
+# Erstellen der Entitäten<a name="erstellen-der-entitaeten"/>  
 
 Die Entitäten werden im Projekt ***QTMusicStoreLight.Logic*** im Ordner ***Entities*** definiert. Nachdem für die Entitäten als Zugriffsstrategie ***Cuncurrency Optimistic*** verwendet wird (RowVersion ist definiert), werden die Entitäten vom bereits definierten ***VersionObject*** abgeleitet.
 
@@ -128,7 +132,7 @@ namespace QTMusicStoreLight.Logic.Entities
 
 Das Datenmodell ist wie nachfolgend dargestellt in ein Objektmodell transformiert worden:
 
-![QTMusicStoreLight-Entities](QTMusicStoreLightEntities.png) 
+![QTMusicStoreLight-Entities](Entities.png) 
 
 ### Definition vom Datenbank-Kontext  
 
