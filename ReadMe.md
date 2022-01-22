@@ -5,16 +5,13 @@ Dieses Projekt ist mit der Vorlage ***QuickTemplate*** erstellt worden und wird 
 
 # Inhaltsverzeichnis
 1. [Projektbeschreibung](#Projektbeschreibung)
-2. [Template](#template)
-3. [Entwicklerwerkzeuge](#entwicklerwerkzeuge)
-4. [Verwendung der Vorlage](#verwendung-der-Vorlage)
-   1. [Projekterstellung](#projekterstellung)
-   2. [Abgleich mit dem QuickTemplate](#abgleich-mit-dem-quicktemplate)
-   3. [Erstellen der Entitäten](#erstellen-der-entitaeten)
-   4. [Definition vom Datenbank-Kontext](#definition-vom-datenbank-kontext)
-   5. [Erstellen der Kontroller](#erstellen-der-kontroller)
-   6. [Erstellen der Datenbank](#erstellen-der-datenbank)
-   7. [Importieren von Daten](#importieren-von-daten)
+   1. [Definition von Artist](#definition-von-artist)
+   2. [Definition von Album](#definition-von-album)
+   3. [Definition von Genre](#definition-von-genre)
+2. [Erstellen der Entitäten](#erstellen-der-entitaeten)
+3. [Erstellen der Kontroller](#erstellen-der-kontroller)
+4. [Erstellen der Datenbank](#erstellen-der-datenbank)
+5. [Importieren von Daten](#importieren-von-daten)
 
 # Projektbeschreibung  
 
@@ -39,7 +36,7 @@ Dieses Projekt ist mit der Vorlage ***QuickTemplate*** erstellt worden und wird 
 Ein Künstler kann beliebig viele Alben zugeordnet haben und das Album ist mit einer Musikrichtung (Genre) verbunden. Das Datenmodell für den **MusicStoreLight** ist wie folgt definiert:
 
 
-### Definition von ***Artist***
+## Definition von ***Artist***
 
 | Name | Type | MaxLength | Nullable |Unique|
 |------|------|-----------|----------|------|
@@ -47,7 +44,7 @@ Ein Künstler kann beliebig viele Alben zugeordnet haben und das Album ist mit ei
 | RowVersion | byte[] |---|No|---|
 | Name | String | 128 | No |Yes|
 
-### Definition von ***Album***  
+## Definition von ***Album***  
 
 | Name | Type | MaxLength | Nullable |Unique|
 |------|------|-----------|----------|------|
@@ -57,7 +54,7 @@ Ein Künstler kann beliebig viele Alben zugeordnet haben und das Album ist mit ei
 | GenreId | int |---|---|---|
 | Title | String | 256 | No |Yes|
 
-### Definition von ***Genre***
+## Definition von ***Genre***
 
 | Name | Type | MaxLength | Nullable |Unique|
 |------|------|-----------|----------|------|
@@ -134,7 +131,7 @@ Das Datenmodell ist wie nachfolgend dargestellt in ein Objektmodell transformier
 
 ![QTMusicStoreLight-Entities](Entities.png) 
 
-### Definition vom Datenbank-Kontext  
+# Definition vom Datenbank-Kontext  
 
 Nachdem die Entitäten definiert sind, wird nun der Datenbank-Kontext für die Anwendung fertiggesetllt. Aus der Vorlage ***QuickTemplate*** ist der vordefinierte Datenbank-Kontext ***'ProjectDbContext'*** kopiert worden. Diese beinhaltet bereits eine Standard-Implementierung für den generischen Kontroller ***'GenericController&lt;E&gt;'*** und ist als eine **'partielle Klasse'** ausgeführt. Damit diese Klasse angepasst werden kann, wird eine weitere **'partielle Klasse'** zur Klasse ***'ProjectDbContext'*** erstellt. Dazu wird eine Datei mit dem Namen ***'ProjectDbContextExt.cs'*** erstellt. Die Erweiterung ist nachfolgend definiert:
 
@@ -173,11 +170,11 @@ namespace QTMusicStoreLight.Logic.DataContext
 
 Wie aus der obigen Implementierung ersichtlich ist, werden für die entsprechenden Entitäten die ***'DbSet&lt;E&gt;'*** definiert. Zusätzlich wird die partielle Methode ***'GetDbSet&lt;E&gt;(...)'*** definiert. Über diese Methode greift der ***'GenericController&lt;E&gt;'*** auf den konkreten ***'DbSet&lt;E&gt;'*** zu.
 
-### Erstellen der Kontroller  
+# Erstellen der Kontroller  
 
 Der generische Kontroller ***'GenericController&lt;E&gt;'*** implementiert bereits die ***'CRUD'*** Funktionen für eine Entität. Um diese Funktionen für jede Entität zur Verfügung zu stellen, muss für jede Entität ein eigener Kontroller angelegt werden. Die Kontroller werden im Projekt ***QTMusicStoreLight.Logic*** im Ordner ***Controllers*** definiert.  
 
-#### Kontroller für die Entität *Artist* erstellen
+## Kontroller für die Entität *Artist* erstellen
 
 ```csharp
 namespace QTMusicStoreLight.Logic.Controllers
@@ -195,7 +192,7 @@ namespace QTMusicStoreLight.Logic.Controllers
 }
 ```
 
-#### Kontroller für die Entität *Album* erstellen
+## Kontroller für die Entität *Album* erstellen
 
 ```csharp
 namespace QTMusicStoreLight.Logic.Controllers
@@ -213,7 +210,7 @@ namespace QTMusicStoreLight.Logic.Controllers
 }
 ```
 
-#### Kontroller für die Entität *Genre* erstellen
+## Kontroller für die Entität *Genre* erstellen
 
 ```csharp
 namespace QTMusicStoreLight.Logic.Controllers
@@ -233,7 +230,7 @@ namespace QTMusicStoreLight.Logic.Controllers
 
 > **ACHTUNG:**  Die konkreten Kontroller werden mit dem Schlüsselwort ***'sealed'*** spezifiziert. Die Erklärung folgt zu einem späteren Zeitpunkt.  
 
-### Erstellen der Datenbank
+# Erstellen der Datenbank
 
 Dieser Abschnitt erläutert die Erstellung der Datenbank.
 
@@ -253,9 +250,9 @@ Die Verbindungszeichenfolge kann im Projekt **QTMusicStoreLight.ConApp** in der 
 
 ...diese Kommando führt die Migration aus und erzeugt die Datenbank.
 
-### Importieren von Daten  
+# Importieren von Daten  
 
-Der Import wird im Projekt **QTMusicStoreLight.ConApp** in der Datei **Program.cs** implementiert. Zu diesem Zweck werden die Daten, im csv-Format, vom [GitHub](https://github.com/leoggehrer/Data-MusicStore) heruntergeladen und im Ordner **CsvData** abgelegt. In den Eigenschaften der csv-Dateien wird die Eigenschaft **Copy to Output Directory** auf **Copy if newer** eingestellt. Mit dieser Einstellung müssen keine Pfade angegeben werden weil die Dateien in das Ausführungsverzeichnis kopiert werden. Nachfolgend ist der Programm-Code für den Import angegeben:  
+Der Import wird im Projekt **QTMusicStoreLight.ConApp** in der Datei **Program.cs** implementiert. Zu diesem Zweck werden die Daten, im csv-Format, vom [GitHub-MusicStoreDaten](https://github.com/leoggehrer/Data-MusicStore) heruntergeladen und im Ordner **CsvData** abgelegt. In den Eigenschaften der csv-Dateien wird die Eigenschaft **Copy to Output Directory** auf **Copy if newer** eingestellt. Mit dieser Einstellung müssen keine Pfade angegeben werden weil die Dateien in das Ausführungsverzeichnis kopiert werden. Nachfolgend ist der Programm-Code für den Import angegeben:  
 
 ```csharp
 namespace QTMusicStoreLight.ConApp
