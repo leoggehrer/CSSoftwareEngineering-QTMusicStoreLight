@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace QTMusicStoreLight.Logic.Entities
+﻿namespace QTMusicStoreLight.Logic.Entities
 {
     [Table("Albums", Schema = "App")]
     [Index(nameof(Title), IsUnique = true)]

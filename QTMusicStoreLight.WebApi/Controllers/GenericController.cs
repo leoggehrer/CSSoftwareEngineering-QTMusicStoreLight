@@ -41,22 +41,92 @@ namespace QTMusicStoreLight.WebApi.Controllers
             }
             return result;
         }
-        // GET: api/<Controller>
+
+        /// <summary>
+        /// Gets a list of models
+        /// </summary>
+        /// <returns>List of models</returns>
         [HttpGet]
-        public async Task<IEnumerable<M>> GetAsync()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public virtual async Task<ActionResult<IEnumerable<M>>> GetAsync()
         {
             var entities = await EntityController.GetAllAsync();
 
-            return ToModel(entities);
+            return Ok(ToModel(entities));
         }
 
-        // GET api/<Controller>/5
+        /// <summary>
+        /// Get a single model by Id.
+        /// </summary>
+        /// <param name="id">Id of the model to get</param>
+        /// <response code="200">Model found</response>
+        /// <response code="404">Model not found</response>
         [HttpGet("{id}")]
-        public async Task<M?> GetAsync(int id)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public virtual async Task<ActionResult<M?>> GetAsync(int id)
         {
             var entity = await EntityController.GetByIdAsync(id);
 
-            return ToModel(entity);
+            return entity == null ? NotFound() : Ok(ToModel(entity));
+        }
+
+        /// <summary>
+        /// Adds a model.
+        /// </summary>
+        /// <param name="model">Model to add</param>
+        /// <returns>Data about the created model (including primary key)</returns>
+        /// <response code="201">Model created</response>
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        public virtual async Task<ActionResult<M>> PostAsync([FromBody] M model)
+        {
+            var entity = new E();
+
+            entity.CopyFrom(model);
+            entity = await EntityController.InsertAsync(entity);
+            await EntityController.SaveChangesAsync();
+
+            return CreatedAtRoute(nameof(GetAsync), new { id = entity.Id }, ToModel(entity));
+        }
+
+        /// <summary>
+        /// Updates a model
+        /// </summary>
+        /// <param name="id">Id of the model to update</param>
+        /// <param name="model">Data to update</param>
+        /// <returns>Data about the updated model</returns>
+        /// <response code="404">Model not found</response>
+        [HttpPut("{id}")]
+        public virtual async Task<ActionResult<M>> PutAsync(int id, [FromBody] M model)
+        {
+            var entity = await EntityController.GetByIdAsync(id);
+
+            if (entity != null)
+            {
+                entity.CopyFrom(model);
+                await EntityController.UpdateAsync(entity);
+                await EntityController.SaveChangesAsync();
+            }
+            return entity == null ? NotFound() : Ok(ToModel(entity));
+        }
+
+        /// <summary>
+        /// Delete a single model by Id
+        /// </summary>
+        /// <param name="id">Id of the model to delete</param>
+        /// <response code="204">Model deleted</response>
+        /// <response code="404">Model not found</response>
+        [HttpDelete("{id}")]
+        public virtual async Task<ActionResult> DeleteAsync(int id)
+        {
+            var entity = await EntityController.GetByIdAsync(id);
+
+            if (entity != null)
+            {
+                await EntityController.DeleteAsync(entity.Id);
+                await EntityController.SaveChangesAsync();
+            }
+            return entity == null ? NotFound() : NoContent();
         }
 
         #region Dispose pattern

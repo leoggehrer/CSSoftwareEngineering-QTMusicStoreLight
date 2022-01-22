@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Linq;
-
-namespace QTMusicStoreLight.ConApp
+﻿namespace QTMusicStoreLight.ConApp
 {
     partial class Program
     {
@@ -22,7 +19,7 @@ namespace QTMusicStoreLight.ConApp
                                      Name = d[1],
                                  }
                              });
-            var csvAlbums = File.ReadAllLines("CsvData/Album.csv")
+            var csvAlbums = File.ReadAllLines("CsvData/AlbumWithGenre.csv")
                              .Skip(1)
                              .Select(l => l.Split(";"))
                              .Select(d => new
@@ -53,7 +50,7 @@ namespace QTMusicStoreLight.ConApp
             {
                 using var albumsCtrl = new Logic.Controllers.AlbumsController();
 
-                albums = (await albumsCtrl.InsertAsync(albums)).ToList();
+                await albumsCtrl.InsertAsync(albums);
                 await albumsCtrl.SaveChangesAsync();
             }).Wait();
         }
