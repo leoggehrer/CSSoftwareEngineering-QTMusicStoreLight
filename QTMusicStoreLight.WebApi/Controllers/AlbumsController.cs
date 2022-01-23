@@ -6,10 +6,12 @@ namespace QTMusicStoreLight.WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ArtistController : GenericController<Logic.Entities.Artist, Models.Artist>
+    public class AlbumsController : GenericController<Logic.Entities.Album, Models.Album>
     {
-        public ArtistController() : base(new Logic.Controllers.ArtistsController())
+        public AlbumsController(Logic.Controllers.AlbumsController artistsController)
+            : base(artistsController)
         {
+
         }
     }
 }

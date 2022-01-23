@@ -1,6 +1,6 @@
 ﻿namespace QTMusicStoreLight.WebApi.Models
 {
-    public class Artist : VersionModel
+    public class Genre : VersionModel
     {
         public string? Name { get; set; }
     }

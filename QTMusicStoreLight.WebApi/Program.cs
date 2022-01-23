@@ -6,6 +6,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.ArtistsController>();
+builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.AlbumsController>();
+builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.GenresController>();
 
 var app = builder.Build();
 
