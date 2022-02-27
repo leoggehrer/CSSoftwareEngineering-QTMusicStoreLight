@@ -2,7 +2,7 @@
 {
     [Table("Genres", Schema = "App")]
     [Index(nameof(Name), IsUnique = true)]
-    public class Genre : VersionObject
+    public class Genre : VersionEntity
     {
         [Required]
         [MaxLength(128)]

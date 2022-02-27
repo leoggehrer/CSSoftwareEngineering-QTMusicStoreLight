@@ -13,6 +13,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{7D1E32D0-6289-41AB-B44D-31F87C0C21A2}"
 	ProjectSection(SolutionItems) = preProject
 		AspMvcDataflow.drawio = AspMvcDataflow.drawio
+		AspMvcDataFlow.md = AspMvcDataFlow.md
 		Entities.png = Entities.png
 		ReadMe.md = ReadMe.md
 	EndProjectSection

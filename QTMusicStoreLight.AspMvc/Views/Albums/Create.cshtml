@@ -1,0 +1,54 @@
+﻿@model QTMusicStoreLight.AspMvc.Models.Album
+
+@{
+    var artistList = new SelectList(Model.Artists, "Id", "Name", Model.ArtistId);
+    var genreList = new SelectList(Model.Genres, "Id", "Name", Model.GenreId);
+
+    ViewData["Title"] = "Create";
+
+}
+
+<h1>Create</h1>
+
+<h4>Album</h4>
+<hr />
+
+@if (string.IsNullOrEmpty(ViewBag.Error) == false)
+{
+    <div class="alert alert-danger" role="alert">
+        @ViewBag.Error
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Title" class="control-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Artists" class="control-label"></label>
+                @Html.DropDownListFor(m => m.ArtistId, artistList, null, new { @class = "form-select" })
+            </div>
+            <div class="form-group">
+                <label asp-for="Genres" class="control-label"></label>
+                @Html.DropDownListFor(m => m.GenreId, genreList, null, new { @class = "form-select" })
+            </div>
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

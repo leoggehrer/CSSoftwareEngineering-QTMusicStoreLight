@@ -4,15 +4,21 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace QTMusicStoreLight.WebApi.Controllers
 {
-    public abstract partial class GenericController<E, M> : ControllerBase, IDisposable
-        where E : Logic.Entities.IdentityObject, new()
-        where M : class, new()
+    /// <summary>
+    /// A generic one for the standard CRUD operations.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of entity</typeparam>
+    /// <typeparam name="TModel">The type of model</typeparam>
+    public abstract partial class GenericController<TEntity, TEditModel, TModel> : ControllerBase, IDisposable
+        where TEntity : Logic.Entities.IdentityEntity, new()
+        where TEditModel : class, new()
+        where TModel : class, new()
     {
         private bool disposedValue;
 
-        protected Logic.Controllers.GenericController<E> EntityController { get; init; }
+        protected Logic.Controllers.GenericController<TEntity> EntityController { get; init; }
 
-        internal GenericController(Logic.Controllers.GenericController<E> controller)
+        internal GenericController(Logic.Controllers.GenericController<TEntity> controller)
         {
             if (controller is null)
             {
@@ -20,10 +26,14 @@ namespace QTMusicStoreLight.WebApi.Controllers
             }
             EntityController = controller;
         }
-
-        protected virtual M ToModel(E? entity)
+        /// <summary>
+        /// Converts an entity to a model and copies all properties of the same name from the entity to the model.
+        /// </summary>
+        /// <param name="entity">The entity to be converted</param>
+        /// <returns>The model with the property values of the same name</returns>
+        protected virtual TModel ToModel(TEntity? entity)
         {
-            var result = new M();
+            var result = new TModel();
 
             if (entity != null)
             {
@@ -31,9 +41,14 @@ namespace QTMusicStoreLight.WebApi.Controllers
             }
             return result;
         }
-        protected virtual IEnumerable<M> ToModel(IEnumerable<E> entities)
+        /// <summary>
+        /// Converts all entities to models and copies all properties of the same name from an entity to the model.
+        /// </summary>
+        /// <param name="entities">The entities to be converted</param>
+        /// <returns>The models</returns>
+        protected virtual IEnumerable<TModel> ToModel(IEnumerable<TEntity> entities)
         {
-            var result = new List<M>();
+            var result = new List<TModel>();
 
             foreach (var entity in entities)
             {
@@ -48,7 +63,7 @@ namespace QTMusicStoreLight.WebApi.Controllers
         /// <returns>List of models</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public virtual async Task<ActionResult<IEnumerable<M>>> GetAsync()
+        public virtual async Task<ActionResult<IEnumerable<TModel>>> GetAsync()
         {
             var entities = await EntityController.GetAllAsync();
 
@@ -63,7 +78,8 @@ namespace QTMusicStoreLight.WebApi.Controllers
         /// <response code="404">Model not found</response>
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public virtual async Task<ActionResult<M?>> GetAsync(int id)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public virtual async Task<ActionResult<TModel?>> GetAsync(int id)
         {
             var entity = await EntityController.GetByIdAsync(id);
 
@@ -78,15 +94,19 @@ namespace QTMusicStoreLight.WebApi.Controllers
         /// <response code="201">Model created</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        public virtual async Task<ActionResult<M>> PostAsync([FromBody] M model)
+        public virtual async Task<ActionResult<TModel>> PostAsync([FromBody] TEditModel model)
         {
-            var entity = new E();
+            var entity = new TEntity();
 
-            entity.CopyFrom(model);
-            entity = await EntityController.InsertAsync(entity);
+            if (model != null)
+            {
+                entity.CopyFrom(model);
+            }
+            var insertEntity = await EntityController.InsertAsync(entity);
+
             await EntityController.SaveChangesAsync();
 
-            return CreatedAtRoute(nameof(GetAsync), new { id = entity.Id }, ToModel(entity));
+            return CreatedAtAction("Get", new { id = entity.Id }, ToModel(insertEntity));
         }
 
         /// <summary>
@@ -95,13 +115,16 @@ namespace QTMusicStoreLight.WebApi.Controllers
         /// <param name="id">Id of the model to update</param>
         /// <param name="model">Data to update</param>
         /// <returns>Data about the updated model</returns>
+        /// <response code="200">Model updated</response>
         /// <response code="404">Model not found</response>
         [HttpPut("{id}")]
-        public virtual async Task<ActionResult<M>> PutAsync(int id, [FromBody] M model)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public virtual async Task<ActionResult<TModel>> PutAsync(int id, [FromBody] TEditModel model)
         {
             var entity = await EntityController.GetByIdAsync(id);
 
-            if (entity != null)
+            if (entity != null && model != null)
             {
                 entity.CopyFrom(model);
                 await EntityController.UpdateAsync(entity);
@@ -117,6 +140,8 @@ namespace QTMusicStoreLight.WebApi.Controllers
         /// <response code="204">Model deleted</response>
         /// <response code="404">Model not found</response>
         [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public virtual async Task<ActionResult> DeleteAsync(int id)
         {
             var entity = await EntityController.GetByIdAsync(id);

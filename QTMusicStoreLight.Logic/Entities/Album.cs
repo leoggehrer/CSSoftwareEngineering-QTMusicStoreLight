@@ -2,7 +2,7 @@
 {
     [Table("Albums", Schema = "App")]
     [Index(nameof(Title), IsUnique = true)]
-    public class Album : VersionObject
+    public class Album : VersionEntity
     {
         public int ArtistId { get; set; }
         public int GenreId { get; set; }

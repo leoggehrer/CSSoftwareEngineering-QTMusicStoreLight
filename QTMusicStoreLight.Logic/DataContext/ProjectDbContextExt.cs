@@ -9,7 +9,7 @@ namespace QTMusicStoreLight.Logic.DataContext
         public DbSet<Album>? AlbumSet { get; set; }
         public DbSet<Genre>? GenreSet { get; set; }
 
-        partial void GetDbSet<E>(ref DbSet<E>? dbSet, ref bool handled) where E : IdentityObject
+        partial void GetDbSet<E>(ref DbSet<E>? dbSet, ref bool handled) where E : IdentityEntity
         {
             if (typeof(E) == typeof(Artist))
             {

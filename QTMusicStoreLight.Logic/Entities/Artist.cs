@@ -2,7 +2,7 @@
 {
     [Table("Artists", Schema = "App")]
     [Index(nameof(Name), IsUnique = true)]
-    public class Artist : VersionObject
+    public class Artist : VersionEntity
     {
         [Required]
         [MaxLength(128)]

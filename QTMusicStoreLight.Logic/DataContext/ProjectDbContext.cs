@@ -29,14 +29,29 @@ namespace QTMusicStoreLight.Logic.DataContext
         static partial void BeforeClassInitialize();
         static partial void AfterClassInitialize();
 
+        public ProjectDbContext()
+        {
+            Constructing();
+            Constructed();
+        }
+        partial void Constructing();
+        partial void Constructed();
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(ConnectionString);
+            var handled = false;
 
+            BeforeOnConfiguring(optionsBuilder, ref handled);
+            if (handled == false)
+            {
+                optionsBuilder.UseSqlServer(ConnectionString);
+            }
+            AfterOnConfiguring(optionsBuilder);
             base.OnConfiguring(optionsBuilder);
         }
+        static partial void BeforeOnConfiguring(DbContextOptionsBuilder optionsBuilder, ref bool handled);
+        static partial void AfterOnConfiguring(DbContextOptionsBuilder optionsBuilder);
 
-        public DbSet<E> GetDbSet<E>() where E : Entities.IdentityObject
+        public DbSet<E> GetDbSet<E>() where E : Entities.IdentityEntity
         {
             var handled = false;
             var result = default(DbSet<E>);
@@ -48,7 +63,7 @@ namespace QTMusicStoreLight.Logic.DataContext
             }
             return result;
         }
-        partial void GetDbSet<E>(ref DbSet<E>? dbSet, ref bool handled) where E : Entities.IdentityObject;
+        partial void GetDbSet<E>(ref DbSet<E>? dbSet, ref bool handled) where E : Entities.IdentityEntity;
     }
 }
 //MdEnd
