@@ -14,9 +14,13 @@ Dieses Projekt ist mit der Vorlage ***QuickTemplate*** erstellt worden und wird 
    3. [Erstellen der Datenbank](#erstellen-der-datenbank)
    4. [Importieren von Daten](#importieren-von-daten)
 3. [Erstellen der AspMvc-Anwendung](#erstellen-der-aspmvc-anwendung)
-   1. [Erstellen der Models](#erstellen-der-models)
-   2. [Erstellen der Kontrollers](#erstellen-der-kontrollers)
+   1. [Erstellen der AspMvc-Models](#erstellen-der-aspmvc-models)
+   2. [Erstellen der AspMvc-Kontrollers](#erstellen-der-aspmvc-kontrollers)
    3. [Erstellen der Ansichten](#erstellen-der-ansichten)
+4. [Erstellen der RESTful-Services](#erstellen-der-restful-services)
+   1. [Erstellen der WebApi-Models](#erstellen-der-webapi-models)
+   2. [Erstellen der WebApi-Kontrollers](#erstellen-der-webapi-kontrollers)
+   3. [Eintragen der Logik-Kontrollers in die Dependency Injection](#eintragen-der-logik-kontroller-in-die-dependency-injection) 
 
 # Projektbeschreibung  
 
@@ -327,7 +331,7 @@ In der Zeile ***await albumsCtrl.InsertAsync(albums);*** werden die Objekte in d
 
 ## Erstellen der AspMvc-Anwendung
 
-### Erstellen der Models
+### Erstellen der AspMvc-Models
 
 Für die Umsetzung der AspMvc-Anwendung ist die Erstellung von Models erforderlich. Diese Models sind die Daten-Transfer-Objekte (DTO's) für die AspMvc-Anwendung vom Kontroller zur Ansicht und umgekehrt. Diese DTO's befinden sich im Ordner **Models** der Amwendung.
 
@@ -389,7 +393,7 @@ namespace QTMusicStoreLight.AspMvc.Models
 
 > **HINWEIS:** Die zusätzlichen Eigenschaften *ArtistName* und *GenreName* dienen zur Anzeige in der Übersicht (Liste). Die Eigenschaften *Genres* und *Artist* werden in der Ansicht *Create* und *Edit* für die Zuordnung benötigt.  
 
-### Erstellen der Kontrollers
+### Erstellen der AspMvc-Kontrollers
 
 ### Kontroller *Artist* erstellen
 
@@ -1577,6 +1581,356 @@ namespace QTMusicStoreLight.AspMvc.Controllers
         <a asp-action="Index">Back to List</a>
     </form>
 </div>
+```
+
+## Erstellen der RESTful-Services
+
+### Erstellen der WebApi-Models
+
+Für die Umsetzung der ***RESTful-Services*** ist die Erstellung von Models erforderlich. Diese Models sind die Daten-Transfer-Objekte (DTO's) für die WebApi-Anwendung vom Kontroller zum Transformationsprozess und umgekehrt. Diese DTO's befinden sich im Ordner **Models** der Amwendung.
+
+Die Implementierung des Models ***Artist***:  
+
+```csharp
+namespace QTMusicStoreLight.WebApi.Models
+{
+    public class Artist : VersionModel
+    {
+        public string? Name { get; set; }
+    }
+}
+```
+
+Die Implementierung des Models ***ArtistEdit***:  
+
+```csharp
+namespace QTMusicStoreLight.WebApi.Models
+{
+    public class ArtistEdit
+    {
+        public string? Name { get; set; }
+    }
+}
+```
+
+Die Implementierung des Models ***Genre***:  
+
+```csharp
+namespace QTMusicStoreLight.WebApi.Models
+{
+    public class Genre : VersionModel
+    {
+        public string? Name { get; set; }
+    }
+}
+```
+
+Die Implementierung des Models ***GenreEdit***:  
+
+```csharp
+namespace QTMusicStoreLight.WebApi.Models
+{
+    public class GenreEdit
+    {
+        public string? Name { get; set; }
+    }
+}
+```
+
+Die Implementierung des Models ***Album***:  
+
+```csharp
+namespace QTMusicStoreLight.WebApi.Models
+{
+    public class Album : VersionModel
+    {
+        public int ArtistId { get; set; }
+        public int GenreId { get; set; }
+        public string? Title { get; set; }
+    }
+}
+```
+
+Die Implementierung des Models ***AlbumEdit***:  
+
+```csharp
+namespace QTMusicStoreLight.WebApi.Models
+{
+    public class AlbumEdit
+    {
+        public int ArtistId { get; set; }
+        public int GenreId { get; set; }
+        public string? Title { get; set; }
+    }
+}
+```
+
+### Erstellen der WebApi-Kontrollers
+
+Der WebApi-Kontroller stellt die CRUD-Operationen für jeweils eine Entität zur Verfügung. Diese Operationen sind im Wesentlichen für alle Entitäten gleich. Daher ist es naheliegend einen generischen Kontroller für diese Operationen zu implementieren, welcher für die Umsetzung der konkreten Kontroller verwendet werden kann. In der Vorlage im Ordner **Controllers** befindet sich der generische Kontroller. Nachfolgend der Programmcode für die Umsetzung des generischen Kontrollers:
+
+```csharp
+//@CodeCopy
+//MdStart
+using Microsoft.AspNetCore.Mvc;
+
+namespace QTMusicStoreLight.WebApi.Controllers
+{
+    /// <summary>
+    /// A generic one for the standard CRUD operations.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of entity</typeparam>
+    /// <typeparam name="TModel">The type of model</typeparam>
+    public abstract partial class GenericController<TEntity, TEditModel, TModel> : ControllerBase, IDisposable
+        where TEntity : Logic.Entities.IdentityEntity, new()
+        where TEditModel : class, new()
+        where TModel : class, new()
+    {
+        private bool disposedValue;
+
+        protected Logic.Controllers.GenericController<TEntity> EntityController { get; init; }
+
+        internal GenericController(Logic.Controllers.GenericController<TEntity> controller)
+        {
+            if (controller is null)
+            {
+                throw new ArgumentNullException(nameof(controller));
+            }
+            EntityController = controller;
+        }
+        /// <summary>
+        /// Converts an entity to a model and copies all properties of the same name from the entity to the model.
+        /// </summary>
+        /// <param name="entity">The entity to be converted</param>
+        /// <returns>The model with the property values of the same name</returns>
+        protected virtual TModel ToModel(TEntity? entity)
+        {
+            var result = new TModel();
+
+            if (entity != null)
+            {
+                result.CopyFrom(entity);
+            }
+            return result;
+        }
+        /// <summary>
+        /// Converts all entities to models and copies all properties of the same name from an entity to the model.
+        /// </summary>
+        /// <param name="entities">The entities to be converted</param>
+        /// <returns>The models</returns>
+        protected virtual IEnumerable<TModel> ToModel(IEnumerable<TEntity> entities)
+        {
+            var result = new List<TModel>();
+
+            foreach (var entity in entities)
+            {
+                result.Add(ToModel(entity));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Gets a list of models
+        /// </summary>
+        /// <returns>List of models</returns>
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public virtual async Task<ActionResult<IEnumerable<TModel>>> GetAsync()
+        {
+            var entities = await EntityController.GetAllAsync();
+
+            return Ok(ToModel(entities));
+        }
+
+        /// <summary>
+        /// Get a single model by Id.
+        /// </summary>
+        /// <param name="id">Id of the model to get</param>
+        /// <response code="200">Model found</response>
+        /// <response code="404">Model not found</response>
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public virtual async Task<ActionResult<TModel?>> GetAsync(int id)
+        {
+            var entity = await EntityController.GetByIdAsync(id);
+
+            return entity == null ? NotFound() : Ok(ToModel(entity));
+        }
+
+        /// <summary>
+        /// Adds a model.
+        /// </summary>
+        /// <param name="model">Model to add</param>
+        /// <returns>Data about the created model (including primary key)</returns>
+        /// <response code="201">Model created</response>
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        public virtual async Task<ActionResult<TModel>> PostAsync([FromBody] TEditModel model)
+        {
+            var entity = new TEntity();
+
+            if (model != null)
+            {
+                entity.CopyFrom(model);
+            }
+            var insertEntity = await EntityController.InsertAsync(entity);
+
+            await EntityController.SaveChangesAsync();
+
+            return CreatedAtAction("Get", new { id = entity.Id }, ToModel(insertEntity));
+        }
+
+        /// <summary>
+        /// Updates a model
+        /// </summary>
+        /// <param name="id">Id of the model to update</param>
+        /// <param name="model">Data to update</param>
+        /// <returns>Data about the updated model</returns>
+        /// <response code="200">Model updated</response>
+        /// <response code="404">Model not found</response>
+        [HttpPut("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public virtual async Task<ActionResult<TModel>> PutAsync(int id, [FromBody] TEditModel model)
+        {
+            var entity = await EntityController.GetByIdAsync(id);
+
+            if (entity != null && model != null)
+            {
+                entity.CopyFrom(model);
+                await EntityController.UpdateAsync(entity);
+                await EntityController.SaveChangesAsync();
+            }
+            return entity == null ? NotFound() : Ok(ToModel(entity));
+        }
+
+        /// <summary>
+        /// Delete a single model by Id
+        /// </summary>
+        /// <param name="id">Id of the model to delete</param>
+        /// <response code="204">Model deleted</response>
+        /// <response code="404">Model not found</response>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public virtual async Task<ActionResult> DeleteAsync(int id)
+        {
+            var entity = await EntityController.GetByIdAsync(id);
+
+            if (entity != null)
+            {
+                await EntityController.DeleteAsync(entity.Id);
+                await EntityController.SaveChangesAsync();
+            }
+            return entity == null ? NotFound() : NoContent();
+        }
+
+        #region Dispose pattern
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects)
+                    EntityController.Dispose();
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~GenericController()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+        #endregion Dispose pattern
+    }
+}
+//MdEnd
+```
+
+### Kontroller *Artist* erstellen
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+
+namespace QTMusicStoreLight.WebApi.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ArtistsController : GenericController<Logic.Entities.Artist, Models.ArtistEdit, Models.Artist>
+    {
+        public ArtistsController(Logic.Controllers.ArtistsController artistsController)
+            : base(artistsController)
+        {
+
+        }
+    }
+}
+```
+
+### Kontroller *Genre* erstellen
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+
+namespace QTMusicStoreLight.WebApi.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class GenresController : GenericController<Logic.Entities.Genre, Models.GenreEdit, Models.Genre>
+    {
+        public GenresController(Logic.Controllers.GenresController artistsController)
+            : base(artistsController)
+        {
+
+        }
+    }
+}
+```
+
+### Kontroller *Album* erstellen
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+
+namespace QTMusicStoreLight.WebApi.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class AlbumsController : GenericController<Logic.Entities.Album, Models.AlbumEdit, Models.Album>
+    {
+        public AlbumsController(Logic.Controllers.AlbumsController artistsController)
+            : base(artistsController)
+        {
+
+        }
+    }
+}
+```
+
+### Eintragen der Logik-Kontrollers in die Dependency Injection
+
+Die Logik-Kontroller, welche für den Zugriff auf den Backend verantwortlich sind, müssen in die ***Dependency Injection*** eingetragen werden. Wenn vom Framework ein Kontroller instanziiert wird, dann übernimmt der Framework das eingetragene Injection-Objekt und übergibt dieses den Kontroller im Konstructor.  
+Nachfolgend die Eintragung der Logik-Kontroller in die ***Dependency-Injection*** in der Datei *Program.cs*:
+
+```csharp
+builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.ArtistsController>();
+builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.AlbumsController>();
+builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.GenresController>();
 ```
 
 **Viel Spaß beim Testen!**
