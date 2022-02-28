@@ -8,8 +8,8 @@ namespace QTMusicStoreLight.WebApi.Controllers
     [ApiController]
     public class AlbumsController : GenericController<Logic.Entities.Album, Models.AlbumEdit, Models.Album>
     {
-        public AlbumsController(Logic.Controllers.AlbumsController artistsController)
-            : base(artistsController)
+        public AlbumsController(Logic.Controllers.AlbumsController controller)
+            : base(controller)
         {
 
         }

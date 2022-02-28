@@ -3,6 +3,11 @@
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Add logic controllers
+builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.ArtistsController>();
+builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.AlbumsController>();
+builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.GenresController>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

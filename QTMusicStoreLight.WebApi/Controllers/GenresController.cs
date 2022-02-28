@@ -8,8 +8,8 @@ namespace QTMusicStoreLight.WebApi.Controllers
     [ApiController]
     public class GenresController : GenericController<Logic.Entities.Genre, Models.GenreEdit, Models.Genre>
     {
-        public GenresController(Logic.Controllers.GenresController artistsController)
-            : base(artistsController)
+        public GenresController(Logic.Controllers.GenresController controller)
+            : base(controller)
         {
 
         }
