@@ -260,7 +260,7 @@ Die Verbindungszeichenfolge kann im Projekt **QTMusicStoreLight.ConApp** in der 
   
 > PM> update-database  
   
-...diese Kommando f�hrt die Migration aus und erzeugt die Datenbank.  
+...diese Kommando führt die Migration aus und erzeugt die Datenbank.  
   
 ## Importieren von Daten  
   
@@ -1933,4 +1933,4 @@ builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.AlbumsControll
 builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.GenresController>();  
 ```  
   
-**Viel Spa� beim Testen!**  
+**Viel Spaß beim Testen!**  
