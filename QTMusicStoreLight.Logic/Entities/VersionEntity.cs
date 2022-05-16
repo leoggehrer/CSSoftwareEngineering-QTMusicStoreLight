@@ -3,7 +3,7 @@
 
 namespace QTMusicStoreLight.Logic.Entities
 {
-    public abstract partial class VersionEntity : IdentityEntity
+    public abstract partial class VersionEntity : IdentityEntity, IVersionable
     {
         /// <summary>
         /// Row version of the entity.

@@ -31,19 +31,21 @@
       <Property Name="Albums" />
     </ShowAsCollectionAssociation>
   </Class>
-  <Class Name="QTMusicStoreLight.Logic.Entities.IdentityObject">
+  <Class Name="QTMusicStoreLight.Logic.Entities.IdentityEntity">
     <Position X="1" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>Entities\IdentityObject.cs</FileName>
+      <FileName>Entities\IdentityEntity.cs</FileName>
     </TypeIdentifier>
+    <Lollipop Position="0.2" />
   </Class>
-  <Class Name="QTMusicStoreLight.Logic.Entities.VersionObject">
+  <Class Name="QTMusicStoreLight.Logic.Entities.VersionEntity">
     <Position X="4" Y="0.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
-      <FileName>Entities\VersionObject.cs</FileName>
+      <FileName>Entities\VersionEntity.cs</FileName>
     </TypeIdentifier>
+    <Lollipop Position="0.2" />
   </Class>
   <Font Name="Segoe UI" Size="9" />
 </ClassDiagram>

@@ -3,12 +3,12 @@
 
 namespace QTMusicStoreLight.Logic.Models
 {
-    public abstract partial class IdentityModel
+    public abstract partial class IdentityModel : IIdentifyable
     {
         /// <summary>
         /// ID of the entity (primary key)
         /// </summary>
-        public virtual int Id { get; internal set; }
+        public virtual int Id { get; set; }
     }
 }
 //MdEnd

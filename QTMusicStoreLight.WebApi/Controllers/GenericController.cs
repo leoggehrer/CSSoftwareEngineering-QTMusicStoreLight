@@ -7,52 +7,69 @@ namespace QTMusicStoreLight.WebApi.Controllers
     /// <summary>
     /// A generic one for the standard CRUD operations.
     /// </summary>
-    /// <typeparam name="TEntity">The type of entity</typeparam>
-    /// <typeparam name="TModel">The type of model</typeparam>
-    public abstract partial class GenericController<TEntity, TEditModel, TModel> : ControllerBase, IDisposable
-        where TEntity : Logic.Entities.IdentityEntity, new()
+    /// <typeparam name="TAccessModel">The type of access model</typeparam>
+    /// <typeparam name="TEditModel">The type of edit model</typeparam>
+    /// <typeparam name="TOutModel">The type of output model</typeparam>
+    [ApiController]
+    [Route("api/[controller]")]
+    public abstract partial class GenericController<TAccessModel, TEditModel, TOutModel> : ApiControllerBase, IDisposable
+        where TAccessModel : class, Logic.IIdentifyable, new()
         where TEditModel : class, new()
-        where TModel : class, new()
+        where TOutModel : class, new()
     {
-        private bool disposedValue;
+        private bool disposedValue = false;
+#if ACCOUNT_ON
+        private bool initSessionToken = false;
+#endif
+        private Logic.IDataAccess<TAccessModel>? _dataAccess;
 
-        protected Logic.Controllers.GenericController<TEntity> EntityController { get; init; }
-
-        internal GenericController(Logic.Controllers.GenericController<TEntity> controller)
+        /// <summary>
+        /// This property controls access to the logic operations.
+        /// </summary>
+        protected Logic.IDataAccess<TAccessModel> DataAccess
         {
-            if (controller is null)
+            get
             {
-                throw new ArgumentNullException(nameof(controller));
+#if ACCOUNT_ON
+                if (initSessionToken == false)
+                {
+                    initSessionToken = true;
+                    _dataAccess!.SessionToken = GetSessionToken();
+                }
+#endif
+                return _dataAccess!;
             }
-            EntityController = controller;
+            init => _dataAccess = value;
+        }
+
+        internal GenericController(Logic.IDataAccess<TAccessModel> dataAccess)
+        {
+            DataAccess = dataAccess;
         }
         /// <summary>
         /// Converts an entity to a model and copies all properties of the same name from the entity to the model.
         /// </summary>
         /// <param name="entity">The entity to be converted</param>
         /// <returns>The model with the property values of the same name</returns>
-        protected virtual TModel ToModel(TEntity? entity)
+        protected virtual TOutModel ToOutModel(TAccessModel entity)
         {
-            var result = new TModel();
+            var result = new TOutModel();
 
-            if (entity != null)
-            {
-                result.CopyFrom(entity);
-            }
+            result.CopyFrom(entity);
             return result;
         }
         /// <summary>
         /// Converts all entities to models and copies all properties of the same name from an entity to the model.
         /// </summary>
-        /// <param name="entities">The entities to be converted</param>
+        /// <param name="accessModels">The entities to be converted</param>
         /// <returns>The models</returns>
-        protected virtual IEnumerable<TModel> ToModel(IEnumerable<TEntity> entities)
+        protected virtual IEnumerable<TOutModel> ToOutModel(IEnumerable<TAccessModel> accessModels)
         {
-            var result = new List<TModel>();
+            var result = new List<TOutModel>();
 
-            foreach (var entity in entities)
+            foreach (var entity in accessModels)
             {
-                result.Add(ToModel(entity));
+                result.Add(ToOutModel(entity));
             }
             return result;
         }
@@ -63,11 +80,11 @@ namespace QTMusicStoreLight.WebApi.Controllers
         /// <returns>List of models</returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public virtual async Task<ActionResult<IEnumerable<TModel>>> GetAsync()
+        public virtual async Task<ActionResult<IEnumerable<TOutModel>>> GetAsync()
         {
-            var entities = await EntityController.GetAllAsync();
+            var accessModels = await DataAccess.GetAllAsync();
 
-            return Ok(ToModel(entities));
+            return Ok(ToOutModel(accessModels));
         }
 
         /// <summary>
@@ -79,58 +96,55 @@ namespace QTMusicStoreLight.WebApi.Controllers
         [HttpGet("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public virtual async Task<ActionResult<TModel?>> GetAsync(int id)
+        public virtual async Task<ActionResult<TOutModel?>> GetAsync(int id)
         {
-            var entity = await EntityController.GetByIdAsync(id);
+            var accessModel = await DataAccess.GetByIdAsync(id);
 
-            return entity == null ? NotFound() : Ok(ToModel(entity));
+            return accessModel == null ? NotFound() : Ok(ToOutModel(accessModel));
         }
 
         /// <summary>
         /// Adds a model.
         /// </summary>
-        /// <param name="model">Model to add</param>
+        /// <param name="editModel">Model to add</param>
         /// <returns>Data about the created model (including primary key)</returns>
         /// <response code="201">Model created</response>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        public virtual async Task<ActionResult<TModel>> PostAsync([FromBody] TEditModel model)
+        public virtual async Task<ActionResult<TOutModel>> PostAsync([FromBody] TEditModel editModel)
         {
-            var entity = new TEntity();
+            var accessModel = new TAccessModel();
 
-            if (model != null)
-            {
-                entity.CopyFrom(model);
-            }
-            var insertEntity = await EntityController.InsertAsync(entity);
+            accessModel.CopyFrom(editModel);
+            var insertEntity = await DataAccess.InsertAsync(accessModel);
 
-            await EntityController.SaveChangesAsync();
+            await DataAccess.SaveChangesAsync();
 
-            return CreatedAtAction("Get", new { id = entity.Id }, ToModel(insertEntity));
+            return CreatedAtAction("Get", new { id = accessModel.Id }, ToOutModel(insertEntity));
         }
 
         /// <summary>
         /// Updates a model
         /// </summary>
         /// <param name="id">Id of the model to update</param>
-        /// <param name="model">Data to update</param>
+        /// <param name="editModel">Data to update</param>
         /// <returns>Data about the updated model</returns>
         /// <response code="200">Model updated</response>
         /// <response code="404">Model not found</response>
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public virtual async Task<ActionResult<TModel>> PutAsync(int id, [FromBody] TEditModel model)
+        public virtual async Task<ActionResult<TOutModel>> PutAsync(int id, [FromBody] TEditModel editModel)
         {
-            var entity = await EntityController.GetByIdAsync(id);
+            var accessModel = await DataAccess.GetByIdAsync(id);
 
-            if (entity != null && model != null)
+            if (accessModel != null)
             {
-                entity.CopyFrom(model);
-                await EntityController.UpdateAsync(entity);
-                await EntityController.SaveChangesAsync();
+                accessModel.CopyFrom(editModel);
+                await DataAccess.UpdateAsync(accessModel);
+                await DataAccess.SaveChangesAsync();
             }
-            return entity == null ? NotFound() : Ok(ToModel(entity));
+            return accessModel == null ? NotFound() : Ok(ToOutModel(accessModel));
         }
 
         /// <summary>
@@ -144,17 +158,27 @@ namespace QTMusicStoreLight.WebApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public virtual async Task<ActionResult> DeleteAsync(int id)
         {
-            var entity = await EntityController.GetByIdAsync(id);
+            var accessModel = await DataAccess.GetByIdAsync(id);
 
-            if (entity != null)
+            if (accessModel != null)
             {
-                await EntityController.DeleteAsync(entity.Id);
-                await EntityController.SaveChangesAsync();
+                await DataAccess.DeleteAsync(accessModel.Id);
+                await DataAccess.SaveChangesAsync();
             }
-            return entity == null ? NotFound() : NoContent();
+            return accessModel == null ? NotFound() : NoContent();
         }
 
         #region Dispose pattern
+        /// <summary>
+        /// Dispose(bool disposing) executes in two distinct scenarios.
+        /// If disposing equals true, the method has been called directly
+        /// or indirectly by a user's code. Managed and unmanaged resources
+        /// can be disposed.
+        /// If disposing equals false, the method has been called by the
+        /// runtime from inside the finalizer and you should not reference
+        /// other objects. Only unmanaged resources can be disposed.
+        /// </summary>
+        /// <param name="disposing">If true, the method has been called directly or indirectly by a user.</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -162,7 +186,8 @@ namespace QTMusicStoreLight.WebApi.Controllers
                 if (disposing)
                 {
                     // TODO: dispose managed state (managed objects)
-                    EntityController.Dispose();
+                    _dataAccess?.Dispose();
+                    _dataAccess = null;
                 }
 
                 // TODO: free unmanaged resources (unmanaged objects) and override finalizer
@@ -178,6 +203,9 @@ namespace QTMusicStoreLight.WebApi.Controllers
         //     Dispose(disposing: false);
         // }
 
+        /// <summary>
+        /// A derived class should not be able to override this method.
+        /// </summary>
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method

@@ -10,13 +10,13 @@ namespace QTMusicStoreLight.Logic.Facades
     /// </summary>
     /// <typeparam name="TModel">The model type as public type</typeparam>
     /// <typeparam name="TEntity">The entity type for the internal controller</typeparam>
-    public abstract partial class GenericFacade<TModel, TEntity> : FacadeObject, IDataAccess<TModel>
+    internal abstract partial class GenericFacade<TModel, TEntity> : FacadeObject, IDataAccess<TModel>
         where TModel : Models.IdentityModel, new()
         where TEntity : Entities.IdentityEntity, new()
     {
         private bool disposedValue;
 
-        private GenericController<TEntity> Controller { get; init; }
+        protected GenericController<TEntity> Controller { get; init; }
         protected GenericFacade(GenericController<TEntity> controller)
             : base(controller)
         {
@@ -47,10 +47,42 @@ namespace QTMusicStoreLight.Logic.Facades
             return result;
         }
 
+#if ACCOUNT_ON
+        #region SessionToken
+        /// <summary>
+        /// Sets the session token.
+        /// </summary>
+        public string SessionToken
+        {
+            set
+            {
+                Controller.SessionToken = value;
+            }
+        }
+        #endregion SessionToken
+#endif
+
+        #region Count
+        public virtual Task<int> CountAsync()
+        {
+            return Controller.CountAsync();
+        }
+        public virtual Task<int> CountAsync(string predicate, params string[] includeItems)
+        {
+            return Controller.CountAsync(predicate, includeItems);
+        }
+        #endregion Count
+
         #region Queries
         public virtual async Task<TModel[]> GetAllAsync()
         {
             var entities = await Controller.GetAllAsync().ConfigureAwait(false);
+
+            return entities.Select(e => ToModel(e)).ToArray();
+        }
+        public virtual async Task<TModel[]> GetAllAsync(params string[] includeItems)
+        {
+            var entities = await Controller.GetAllAsync(includeItems).ConfigureAwait(false);
 
             return entities.Select(e => ToModel(e)).ToArray();
         }
@@ -59,6 +91,18 @@ namespace QTMusicStoreLight.Logic.Facades
             var entity = await Controller.GetByIdAsync(id).ConfigureAwait(false);
 
             return entity != null ? ToModel(entity) : null;
+        }
+        public virtual async Task<TModel?> GetByIdAsync(int id, params string[] includeItems)
+        {
+            var entity = await Controller.GetByIdAsync(id, includeItems).ConfigureAwait(false);
+
+            return entity != null ? ToModel(entity) : null;
+        }
+        public virtual async Task<TModel[]> QueryAsync(string predicate, params string[] includeItems)
+        {
+            var entities = await Controller.QueryAsync(predicate, includeItems).ConfigureAwait(false);
+
+            return entities.Select(e => ToModel(e)).ToArray();
         }
         #endregion Queries
 

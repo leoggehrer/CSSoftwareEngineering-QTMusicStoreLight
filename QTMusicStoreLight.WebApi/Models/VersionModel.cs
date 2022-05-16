@@ -4,7 +4,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace QTMusicStoreLight.WebApi.Models
 {
-    public abstract partial class VersionModel : IdentityModel
+    /// <summary>
+    /// The model with the version property.
+    /// </summary>
+    public abstract partial class VersionModel : IdentityModel, Logic.IVersionable
     {
         /// <summary>
         /// Row version of the entity.

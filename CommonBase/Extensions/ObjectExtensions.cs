@@ -130,9 +130,6 @@ namespace CommonBase.Extensions
         }
         public static void CopyProperties(object target, object source, Func<string, bool>? filter, Func<string, string>? mapping)
         {
-            target.CheckArgument(nameof(target));
-            source.CheckArgument(nameof(source));
-
             Dictionary<string, PropertyItem> targetPropertyInfos = target.GetType().GetAllTypeProperties();
             Dictionary<string, PropertyItem> sourcePropertyInfos = source.GetType().GetAllTypeProperties();
 
@@ -154,32 +151,35 @@ namespace CommonBase.Extensions
                     {
                         if (propertyItemSource.IsStringType)
                         {
-                            object? value = propertyItemSource.PropertyInfo.GetValue(source, null);
+                            object? value = propertyItemSource.PropertyInfo.GetValue(source);
 
-                            propertyItemTarget.Value.PropertyInfo.SetValue(target, value, null);
+                            propertyItemTarget.Value.PropertyInfo.SetValue(target, value);
                         }
                         else if (propertyItemSource.IsArrayType)
                         {
-                            object? value = propertyItemSource.PropertyInfo.GetValue(source, null);
+                            object? value = propertyItemSource.PropertyInfo.GetValue(source);
 
-                            propertyItemTarget.Value.PropertyInfo.SetValue(target, value, null);
+                            propertyItemTarget.Value.PropertyInfo.SetValue(target, value);
                         }
                         else if (propertyItemSource.PropertyInfo.PropertyType.IsValueType
                             && propertyItemTarget.Value.PropertyInfo.PropertyType.IsValueType)
                         {
-                            object? value = propertyItemSource.PropertyInfo.GetValue(source, null);
+                            object? value = propertyItemSource.PropertyInfo.GetValue(source);
 
-                            propertyItemTarget.Value.PropertyInfo.SetValue(target, value, null);
+                            propertyItemTarget.Value.PropertyInfo.SetValue(target, value);
                         }
                         else if (propertyItemSource.IsComplexType)
                         {
-                            object? srcValue = propertyItemSource.PropertyInfo.GetValue(source);
-                            object? tarValue = propertyItemTarget.Value.PropertyInfo.GetValue(target);
+                            object? value = propertyItemSource.PropertyInfo.GetValue(source);
 
-                            if (srcValue != null && tarValue != null)
-                            {
-                                SetPropertyValues(tarValue, srcValue, filter, mapping, propertyItemTarget.Value.PropertyItems, propertyItemSource.PropertyItems);
-                            }
+                            propertyItemTarget.Value.PropertyInfo.SetValue(target, value);
+                            //object? srcValue = propertyItemSource.PropertyInfo.GetValue(source);
+                            //object? tarValue = propertyItemTarget.Value.PropertyInfo.GetValue(target);
+
+                            //if (srcValue != null && tarValue != null)
+                            //{
+                            //    SetPropertyValues(tarValue, srcValue, filter, mapping, propertyItemTarget.Value.PropertyItems, propertyItemSource.PropertyItems);
+                            //}
                         }
                     }
                 }

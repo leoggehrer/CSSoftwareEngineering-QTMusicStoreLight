@@ -5,43 +5,56 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace QTMusicStoreLight.AspMvc.Controllers
 {
-    public abstract class GenericController<TEntity, TModel> : Controller
-        where TEntity : Logic.Entities.IdentityEntity, new()
-        where TModel : class, new()
+    /// <summary>
+    /// A generic one for the standard CRUD operations.
+    /// </summary>
+    /// <typeparam name="TAccessModel">The type of access model</typeparam>
+    /// <typeparam name="TViewModel">The type of view model</typeparam>
+    public abstract class GenericController<TAccessModel, TViewModel> : Controller
+        where TAccessModel : Logic.IIdentifyable, new()
+        where TViewModel : class, new()
     {
-        private readonly Logic.Controllers.GenericController<TEntity> controller;
-
-        protected GenericController(Logic.Controllers.GenericController<TEntity> controller)
+        public enum ActionMode : int
         {
-            if (controller == null)
-            {
-                throw new ArgumentNullException(nameof(controller));
-            }
+            Index,
+            Details,
+            Create,
+            Insert,
+            Edit,
+            Update,
+            ViewDelete,
+            Delete,
+        }
+        protected Logic.IDataAccess<TAccessModel> DataAccess { get; init; }
 
-            this.controller = controller;
+        protected GenericController(Logic.IDataAccess<TAccessModel> dataAccess)
+        {
+            this.DataAccess = dataAccess ?? throw new ArgumentNullException(nameof(dataAccess));
         }
 
-        private static TModel ToModel(TEntity entity)
+        protected virtual TAccessModel[] AfterQuery(TAccessModel[] accessModels) => accessModels;
+        protected virtual TViewModel ToViewModel(TAccessModel accessModel, ActionMode actionMode)
         {
-            var result = new TModel();
+            var result = new TViewModel();
 
-            result.CopyFrom(entity);
+            result.CopyFrom(accessModel);
+            return BeforeView(result, actionMode);
+        }
+        protected virtual TAccessModel ToAccessModel(TViewModel viewModel)
+        {
+            var result = new TAccessModel();
+
+            result.CopyFrom(viewModel);
             return result;
         }
-        private static TEntity ToEntity(TModel model)
-        {
-            var result = new TEntity();
-
-            result.CopyFrom(model);
-            return result;
-        }
+        protected virtual TViewModel BeforeView(TViewModel viewModel, ActionMode actionMode) => viewModel;
 
         // GET: Item
         public virtual async Task<IActionResult> Index()
         {
-            var entities = await controller.GetAllAsync();
+            var accessModels = await DataAccess.GetAllAsync();
 
-            return View(entities.Select(e => ToModel(e)));
+            return View(AfterQuery(accessModels).Select(e => ToViewModel(e, ActionMode.Index)));
         }
 
         // GET: Item/Details/5
@@ -52,18 +65,21 @@ namespace QTMusicStoreLight.AspMvc.Controllers
                 return NotFound();
             }
 
-            var genre = await controller.GetByIdAsync(id.Value);
-            if (genre == null)
+            var accessModel = await DataAccess.GetByIdAsync(id.Value);
+
+            if (accessModel == null)
             {
                 return NotFound();
             }
-            return View(ToModel(genre));
+            return View(ToViewModel(accessModel, ActionMode.Details));
         }
 
         // GET: Item/Create
         public virtual IActionResult Create()
         {
-            return View();
+            var accessModel = new TAccessModel();
+
+            return View(ToViewModel(accessModel, ActionMode.Create));
         }
 
         // POST: Item/Create
@@ -71,14 +87,16 @@ namespace QTMusicStoreLight.AspMvc.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public virtual async Task<IActionResult> Create(TModel model)
+        public virtual async Task<IActionResult> Create(TViewModel viewModel)
         {
+            TAccessModel accessModel = ToAccessModel(viewModel);
+
             if (ModelState.IsValid)
             {
                 try
                 {
-                    await controller.InsertAsync(ToEntity(model));
-                    await controller.SaveChangesAsync();
+                    await DataAccess.InsertAsync(accessModel);
+                    await DataAccess.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -91,7 +109,7 @@ namespace QTMusicStoreLight.AspMvc.Controllers
                     }
                 }
             }
-            return View(model);
+            return View(ToViewModel(accessModel, ActionMode.Index));
         }
 
         // GET: Item/Edit/5
@@ -102,13 +120,13 @@ namespace QTMusicStoreLight.AspMvc.Controllers
                 return NotFound();
             }
 
-            var entity = await controller.GetByIdAsync(id.Value);
+            var accessModel = await DataAccess.GetByIdAsync(id.Value);
 
-            if (entity == null)
+            if (accessModel == null)
             {
                 return NotFound();
             }
-            return View(ToModel(entity));
+            return View(ToViewModel(accessModel, ActionMode.Edit));
         }
 
         // POST: Item/Edit/5
@@ -116,23 +134,23 @@ namespace QTMusicStoreLight.AspMvc.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public virtual async Task<IActionResult> Edit(int id, TModel model)
+        public virtual async Task<IActionResult> Edit(int id, TViewModel viewModel)
         {
-            var entity = await controller.GetByIdAsync(id);
+            var accessModel = await DataAccess.GetByIdAsync(id);
 
-            if (entity == null)
+            if (accessModel == null)
             {
                 return NotFound();
             }
 
-            entity.CopyFrom(model);
+            accessModel.CopyFrom(viewModel);
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    entity = await controller.UpdateAsync(entity);
-                    await controller.SaveChangesAsync();
+                    accessModel = await DataAccess.UpdateAsync(accessModel);
+                    await DataAccess.SaveChangesAsync();
                 }
                 catch (Exception ex)
                 {
@@ -143,9 +161,8 @@ namespace QTMusicStoreLight.AspMvc.Controllers
                         ViewBag.Error = ex.InnerException.Message;
                     }
                 }
-                return RedirectToAction(nameof(Index));
             }
-            return View(ToModel(entity));
+            return string.IsNullOrEmpty(ViewBag.Error) ? RedirectToAction(nameof(Index)) : View(ToViewModel(accessModel, ActionMode.Update));
         }
 
         // GET: Item/Delete/5
@@ -156,12 +173,13 @@ namespace QTMusicStoreLight.AspMvc.Controllers
                 return NotFound();
             }
 
-            var entity = await controller.GetByIdAsync(id.Value);
-            if (entity == null)
+            var accessModel = await DataAccess.GetByIdAsync(id.Value);
+
+            if (accessModel == null)
             {
                 return NotFound();
             }
-            return View(ToModel(entity));
+            return View(ToViewModel(accessModel, ActionMode.ViewDelete));
         }
 
         // POST: Item/Delete/5
@@ -169,28 +187,31 @@ namespace QTMusicStoreLight.AspMvc.Controllers
         [ValidateAntiForgeryToken]
         public virtual async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var entity = await controller.GetByIdAsync(id);
+            var accessModel = await DataAccess.GetByIdAsync(id);
 
-            try
+            if (accessModel != null)
             {
-                await controller.DeleteAsync(id);
-                await controller.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                ViewBag.Error = ex.Message;
-
-                if (ex.InnerException != null)
+                try
                 {
-                    ViewBag.Error = ex.InnerException.Message;
+                    await DataAccess.DeleteAsync(id);
+                    await DataAccess.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Error = ex.Message;
+
+                    if (ex.InnerException != null)
+                    {
+                        ViewBag.Error = ex.InnerException.Message;
+                    }
                 }
             }
-            return RedirectToAction(nameof(Index));
+            return ViewBag.Error != null ? View(ToViewModel(accessModel, ActionMode.Delete)) : RedirectToAction(nameof(Index));
         }
 
         protected override void Dispose(bool disposing)
         {
-            controller?.Dispose();
+            DataAccess?.Dispose();
             base.Dispose(disposing);
         }
     }

@@ -3,7 +3,7 @@
 
 namespace QTMusicStoreLight.Logic.Entities
 {
-    public abstract partial class IdentityEntity
+    public abstract partial class IdentityEntity : IIdentifyable
     {
         /// <summary>
         /// ID of the entity (primary key)

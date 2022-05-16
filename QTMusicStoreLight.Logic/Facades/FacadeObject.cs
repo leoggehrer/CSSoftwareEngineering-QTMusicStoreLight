@@ -5,7 +5,7 @@ using QTMusicStoreLight.Logic.Controllers;
 
 namespace QTMusicStoreLight.Logic.Facades
 {
-    public abstract class FacadeObject
+    public abstract partial class FacadeObject
     {
         internal ControllerObject ControllerObject { get; private set; }
 
