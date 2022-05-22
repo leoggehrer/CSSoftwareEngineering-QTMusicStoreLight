@@ -20,16 +20,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="CsvData\Album.csv">
+    <None Update="Data\Album.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="CsvData\AlbumWithGenre.csv">
+    <None Update="Data\Artist.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="CsvData\Artist.csv">
+    <None Update="Data\Genre.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="CsvData\Genre.csv">
+    <None Update="Data\Track.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

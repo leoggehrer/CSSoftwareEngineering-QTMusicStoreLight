@@ -8,9 +8,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Add logic controllers
-builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.ArtistsController>();
-builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.AlbumsController>();
-builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.GenresController>();
+builder.Services.AddTransient<QTMusicStoreLight.Logic.Controllers.SongsController>();
 
 var app = builder.Build();
 

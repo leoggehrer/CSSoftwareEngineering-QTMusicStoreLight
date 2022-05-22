@@ -24,52 +24,174 @@ Dieses Projekt ist mit der Vorlage ***QuickTemplate*** erstellt worden und wird 
   
 # Projektbeschreibung  
   
-***QTMusicStoreLight*** ist eine einfache Anwendung zur Verwaltung von Musik-Daten. Damit sollen Künstler (Artists) und deren Alben in einer Datenbank gespeichert werden und bei Bedarf wieder abgerufen werden können. Die Bearbeitung der Daten soll über eine Web-Anwendung als auch über eine Desktop Anwendung ermöglicht werden. Das Datenmodell ist in der folgenden Abbildung skizziert.  
+***QTMusicStoreLight*** ist eine einfache Anwendung zur Verwaltung von Musik-Daten. Mit dieser Anwendung sollen in einer einzigen Entitaet die Daten fuer einen Musiktitlel in einer Datenbank gespeichert und wieder abgerufen werden koennen.  
+
+> HINWEIS: In diesem Beispiel wird absichtlich auf Relationen verzichtet. Damit kann sich der Entwickler besser auf die einzelnen Umsetzungsschritte konzentrieren. In einem weiteren Beispiel **QTMusicStore** sind die Daten Künstler (Artists), Alben, Genre und Track in eigenständige Entitaeten und somit mit Relationen ausgefuehrt.  
+
+## Datenmodell und Datenbank  
+  
+Das Datenmodell fuer ***QTBookStoreLight*** hat folgenden Aufbau:  
   
 ```txt  
-                +-------------+                 +-------------+  
-                |             |                 |             |  
-       +----- n +    Album    + n ----------- 1 +    Genre    |  
-       |        |             |                 |             |   
-       |        +-------------+                 +-------------+  
-       |  
-       1  
-+------+------+  
-|             |  
-|   Artist    |  
-|             |  
-+------+------+  
+  
++-------+--------+   
+|                |
+|      Song      +   
+|                |
++-------+--------+  
   
 ```  
   
-Ein Künstler kann beliebig viele Alben zugeordnet haben und das Album ist mit einer Musikrichtung (Genre) verbunden. Das Datenmodell für den **MusicStoreLight** ist wie folgt definiert:  
+### Definition von ***Song***  
   
+| Name | Type | MaxLength | Nullable |Unique|Db-Field|Access|
+|------|------|-----------|----------|------|--------|------|
+| Id | int |---|---|---| Yes | R |
+| RowVersion | byte[] |---| No |---| Yes | R |
+| ISBNNumber | String | 10 | No | Yes | Yes | RW |
+| Album | String | 256 | No | No | Yes | RW |
+| Artist | String | 128 | No | No | Yes | RW |
+| Genre | String | 128 | No | No | Yes | RW |
+| Title | String | 1024 | No | No | Yes | RW |
+| Composer | String | 512 | Yes | No | Yes | RW |
+| Milliseconds | long | --- | No | No | Yes | RW |
+| Bytes | long | --- | No | No | Yes | RW |
+| UnitPrice | decimal | --- | No | No | Yes | RW |
   
-## Definition von ***Artist***  
+## Aufgaben  
   
-| Name | Type | MaxLength | Nullable |Unique|  
-|------|------|-----------|----------|------|  
-| Id | int |---|---|---|  
-| RowVersion | byte[] |---|No|---|  
-| Name | String | 128 | No |Yes|  
+### Backend-System  
   
-## Definition von ***Album***  
+Erstellen Sie das Backend-System mit der Vorlage ***QuickTemplate*** und definieren die folgenden ***Komponenten***:  
   
-| Name | Type | MaxLength | Nullable |Unique|  
-|------|------|-----------|----------|------|  
-| Id | int |---|---|---|  
-| RowVersion | byte[] |---|No|---|  
-| ArtistId | int |---|---|---|  
-| GenreId | int |---|---|---|  
-| Title | String | 256 | No |Yes|  
+- Erstellen der ***Enumeration***  
+  - *keine*  
+- Erstellen der ***Entitaeten***  
+  - *Song*  
+- Definition des ***Datenbank-Kontext***  
+  - *DbSet&lt;Song&gt;* definieren  
+  - partielle Methode ***GetDbSet<E>()*** implementieren  
+- Erstellen der ***Kontroller*** im *Logic* Projekt  
+  - ***SongsController***  
+- Erstellen der ***Datenbank*** mit den Kommandos in der ***Package Manager Console***  
+  - *add-migration InitDb*  
+  - *update-database*  
+- Implementierung der ***Business-Logic***  
+  - Ueberpruefen der Geschaeftslogik mit ***UnitTests***  
+- Importieren von Daten (optional)  
   
-## Definition von ***Genre***  
+#### Business-Logik  
   
-| Name | Type | MaxLength | Nullable |Unique|  
-|------|------|-----------|----------|------|  
-| Id | int |---|---|---|  
-| RowVersion | byte[] |---|No|---|  
-| Name | String | 128 | No |Yes|  
+Das System muss einige Geschaeftsregeln umsetzen. Diese Regeln werden im Backend implementiert und muessen mit UnitTests ueberprueft werden.   
+  
+> **HINWEIS:** Unter **Geschaeftsregeln** (Business-Rules) versteht man **elementare technische Sachverhalte** im Zusammenhang mit Computerprogrammen. Mit *WENN* *DANN* Scenarien werden die einzelnen Regeln beschrieben.  
+  
+Fuer das ***QTMusicStoreLight*** sind folgende Regeln definiert:  
+  
+| Rule | Subject | Type | Operation | Description | Note |  
+|------|---------|------|-----------|-------------|------|  
+|**A1**| Song |  |  |  |  |  
+|  |  |*WENN*|  | ein Song erstellt oder bearbeitet wird, |  |  
+|  |  |*DANN*|  | muss die Kombination (Album, Artist, Genre, Title) eindeutig sein |  |  
+|  |  |      | UND | der Wert fuer *Millisecounds* muss > 1000 sein |  |  
+|  |  |      | UND | der Wert fuer *Bytes* muss > 100 sein |  |  
+|  |  |      | UND | der Wert fuer *UnitPrice* muss >= 0 sein. |  |  
+  
+#### Unit-Tests  
+  
+All diese Geschaeftsregeln muessen mit **UnitTests** ueberprueft werden. Fuegen Sie eine Test ***'SongsUnitTest'***  im Projekt mit dem Namen ***'QTBookStoreLight.Logic.UnitTest'*** hinzu und implementieren Sie die Tests.  
+   
+## Erstellen des Backends   
+
+### Erstellen der Entitaet *'Song'*:  
+
+```csharp  
+namespace QTMusicStoreLight.Logic.Entities.App
+{
+    [Table("Songs", Schema = "App")]
+    [Index(nameof(Album), nameof(Artist), nameof(Genre), nameof(Title), IsUnique = true)]
+    public class Song : VersionEntity
+    {
+        [Required]
+        [MaxLength(256)]
+        public string Album { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(128)]
+        public string Artist { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(128)]
+        public string Genre { get; set; } = string.Empty;
+        [Required]
+        [MaxLength(1024)]
+        public string Title { get; set; } = string.Empty;
+        [MaxLength(512)]
+        public string? Composer { get; set; }
+        public long Millisconds { get; set; }
+        public long Bytes { get; set; }
+        [Precision(18, 2)]
+        public decimal UnitPrice { get; set; }
+    }
+}
+```  
+
+### Definition des Datenbank-Kontext:  
+
+```csharp  
+namespace QTMusicStoreLight.Logic.DataContext
+{
+    partial class ProjectDbContext
+    {
+        public DbSet<Entities.App.Song>? SongSet { get; set; }
+
+        partial void GetDbSet<E>(ref DbSet<E>? dbSet, ref bool handled) where E : Entities.IdentityEntity
+        {
+            if (typeof(E) == typeof(Entities.App.Song))
+            {
+                handled = true;
+                dbSet = SongSet as DbSet<E>;
+            }
+        }
+    }
+}
+```  
+
+### Ertstellen des Kontrollers *'SongsController'*  
+
+```csharp  
+namespace QTMusicStoreLight.Logic.Controllers
+{
+    public sealed class SongsController : GenericController<Entities.App.Song>
+    {
+        public SongsController() : base()
+        {
+        }
+
+        public SongsController(ControllerObject other) : base(other)
+        {
+        }
+
+        protected override void ValidateEntity(ActionType actionType, Entities.App.Song entity)
+        {
+            if (entity.Millisconds <= 1000)
+            {
+                throw new Modules.Exceptions.LogicException($"The value of '{nameof(entity.Millisconds)}' must be greater than 1000.");
+            }
+            if (entity.Bytes <= 100)
+            {
+                throw new Modules.Exceptions.LogicException($"The value of '{nameof(entity.Bytes)}' must be greater than 100.");
+            }
+            if (entity.UnitPrice < 0)
+            {
+                throw new Modules.Exceptions.LogicException($"The value of '{nameof(entity.UnitPrice)}' cannot be less than 0.");
+            }
+            base.ValidateEntity(actionType, entity);
+        }
+    }
+}
+```  
+
+> HINWEIS: Die Methode *ValidateEntity(...)* wird vor jeder Aktion vom Basis-Kontroller aufgerufen.
+
   
 # Erstellen des Backends   
   
@@ -1061,8 +1183,8 @@ namespace QTMusicStoreLight.AspMvc.Controllers
                 @Html.DisplayFor(modelItem => item.Name)  
             </td>  
             <td>  
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |  
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |  
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>  
             </td>  
         </tr>  
@@ -1196,7 +1318,7 @@ namespace QTMusicStoreLight.AspMvc.Controllers
     
     <form asp-action="Delete">  
         <input type="hidden" asp-for="Id" />  
-        <input type="submit" value="Delete" class="btn btn-danger" /> |  
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>  
     </form>  
 </div>  
@@ -1232,8 +1354,8 @@ namespace QTMusicStoreLight.AspMvc.Controllers
                 @Html.DisplayFor(modelItem => item.Name)  
             </td>  
             <td>  
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |  
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |  
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>  
             </td>  
         </tr>  
@@ -1369,7 +1491,7 @@ namespace QTMusicStoreLight.AspMvc.Controllers
     
     <form asp-action="Delete">  
         <input type="hidden" asp-for="Id" />  
-        <input type="submit" value="Delete" class="btn btn-danger" /> |  
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>  
     </form>  
 </div>  
@@ -1417,8 +1539,8 @@ namespace QTMusicStoreLight.AspMvc.Controllers
                 @Html.DisplayFor(modelItem => item.GenreName)  
             </td>  
             <td>  
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |  
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |  
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
                 <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>  
             </td>  
         </tr>  
@@ -1577,7 +1699,7 @@ namespace QTMusicStoreLight.AspMvc.Controllers
     
     <form asp-action="Delete">  
         <input type="hidden" asp-for="Id" />  
-        <input type="submit" value="Delete" class="btn btn-danger" /> |  
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>  
     </form>  
 </div>  
